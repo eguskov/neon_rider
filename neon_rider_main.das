@@ -81,6 +81,7 @@ def act(dt: float)
     warpTime -= dt
 
     car.alpha = saturate(car.alpha + dt)
+
     let atTime = get_time_after_start()
 
     road.speed  = 3.
