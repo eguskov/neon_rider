@@ -17,8 +17,16 @@ struct Particle
     ttl: float
     maxTtl: float
 
+    isAttractedTo: bool
+    attractTo: float2
+
 struct Emitter
     pos: float2
+    dir: float2
+    vel: float2
+    angle: float
+    omega: float
+
     ttl: float
 
     colorRange: float3[2]
@@ -37,6 +45,8 @@ struct Emitter
     scaleRange: float2
 
     countRange: int2
+
+    isAttractedTo: bool
 
 def Emitter()
     return <- [[Emitter alphaRange=float2(1.),
@@ -67,6 +77,10 @@ def emit(emitter: Emitter)
         p.color = rnd_range(emitter.colorRange)
         p.scale = rnd_range(emitter.scaleRange)
 
+        p.isAttractedTo = emitter.isAttractedTo
+        if p.isAttractedTo
+            p.attractTo = emitter.pos - float2(dotTexture.width)
+
         particles |> push(p)
 
 def explostion(pos: float2)
@@ -83,6 +97,23 @@ def explostion(pos: float2)
     e.ttl           = .1
     emitters |> push(e)
 
+def warp(pos: float2; ttl: float)
+    var e <- Emitter()
+    e.colorRange    = [[auto[] color_to_float3(0x4169E1); color_to_float3(0x4169E1)]]
+    e.pos           = pos
+    e.ttlRange      = float2(.25, .5)
+    e.velRange      = float2(16., 32.) * 8.
+    e.alphaRange    = float2(0.7)
+    e.posRange      = float2(64.)
+    e.velAngleRange = float2(0.)
+    e.scaleRange    = float2(2.)
+    e.countRange    = int2(16, 32)
+    e.angle = 0.
+    e.omega = 0.
+    e.ttl   = ttl
+    e.isAttractedTo = true
+    emitters |> push(e)
+
 def update_particles(dt: float)
     for e in emitters
         e |> emit()
@@ -91,7 +122,10 @@ def update_particles(dt: float)
     for p in particles
         let t = 1. - saturate((p.maxTtl - p.ttl) / p.maxTtl)
         p.ttl -= dt
-        p.pos += p.vel * dt
+        if !p.isAttractedTo
+            p.pos += p.vel * dt
+        else
+            p.pos += length(p.vel) * normalize(p.attractTo - p.pos) * dt
         p.alpha = lerp(p.startAlpha, p.wishAlpha, t)
 
     emitters |> erase_by_ttl()

@@ -26,6 +26,8 @@ def shoot(var car: Car)
         p.vel = car.gunWorldDir * 800.
         projectiles |> push(p)
 
+var warpTime = 0.5
+
 // 'initialize' runs once when game starts and every hot-reload
 [export]
 def initialize
@@ -40,6 +42,7 @@ def initialize
     car.pos = float2(128., 256.)
     car.dir = float2(1., 0.)
     car.up  = float2(0., -1.)
+    car.alpha = 0.
     car.wheelRadius = 24.
     car.wheelsDistance  = 88.
     car.rearWheelOffset = 32.
@@ -57,6 +60,9 @@ def initialize
     car.frontSpring.curLength = springLen
     car.rearSpring.curLength = springLen
 
+    if warpTime > 0.
+        warp(car.pos - float2(0., 50.), warpTime)
+
 // this function is called to update game data,
 // dt - time elapsed since the previous update (in seconds)
 [export]
@@ -70,12 +76,20 @@ def act(dt: float)
     elif get_key_up(VK_LEFT) || get_key_up(VK_RIGHT) || get_key_up(VK_A) || get_key_up(VK_D)
         car.speed = 0.
 
-    let atTime = get_time_after_start()
+    update_particles(dt)
 
-    spawn_enemies(atTime)
+    warpTime -= dt
+
+    car.alpha = saturate(car.alpha + dt)
+    let atTime = get_time_after_start()
 
     road.speed  = 3.
     road.offset = road.speed * atTime
+
+    if warpTime > 0.
+        return
+
+    spawn_enemies(atTime)
 
     car |> update(road, dt)
 
@@ -98,8 +112,6 @@ def act(dt: float)
 
     erase_dead_whit_fx()
 
-    update_particles(dt)
-
 // this function will be called every frame after 'act',
 // you can draw anything in this function
 [export]
@@ -110,18 +122,19 @@ def draw
 
     enable_premultiplied_alpha_blend()
 
-    road |> draw()
     car |> draw()
-
-    draw_enemies()
-
-    for p in projectiles
-        let dir = normalize(p.vel)
-        let from = p.pos - dir * 4.
-        let to   = p.pos + dir * 4.
-        dotTexture |> draw_segment(from, to, 0xFFFFFF)
+    road |> draw()
 
     draw_particles()
+
+    if warpTime <= 0.
+        draw_enemies()
+
+        for p in projectiles
+            let dir = normalize(p.vel)
+            let from = p.pos - dir * 4.
+            let to   = p.pos + dir * 4.
+            dotTexture |> draw_segment(from, to, 0xFFFFFF)
 
     // let wGunPos = rotate(car.tm, car.gunPos) + car.pos
     // circle(wGunPos.x, wGunPos.y, 2.f, 0xFFFFFFFF)

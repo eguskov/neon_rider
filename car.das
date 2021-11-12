@@ -58,6 +58,8 @@ struct Car
     shootFreq: float
     lastShootAtTime: float
 
+    alpha: float
+
     // Debug
     frontTraceFrom: float2
     frontTraceTo: float2
@@ -87,7 +89,8 @@ def draw(c: Car)
                               float2(0., 16.)   // 15
                      ]]
 
-    let bodyColor = 0x4169E1
+    
+    let bodyColor = make_color(color_to_float3(0x4169E1) * car.alpha)
     let bodyScale = 0.75
     for i in range(length(bodyPoints) - 1)
         draw_segment(dotTextureLowGlow, bodyPoints[i] * bodyScale, bodyPoints[i + 1] * bodyScale, bodyColor)
@@ -96,7 +99,7 @@ def draw(c: Car)
     dotTextureNoGlow |> draw_arc(float2(128., -13.), 16.f, 180., 360., bodyColor)
     dotTextureNoGlow |> draw_segment(c.gunPos, c.gunPos + c.gunDir * c.gunLength, bodyColor)
 
-    let wheelsColor = 0xD2691E
+    let wheelsColor = make_color(color_to_float3(0xD2691E) * car.alpha)
     transform2d_pop()
 
     let step = 0.25f
