@@ -127,7 +127,8 @@ def spawn(var romb: RombEnemy)
     return romb
 
 def draw(romb: RombEnemy)
-    let sz = romb.size
+    let scale = 0.75
+    let sz = romb.size * scale
     let p  = romb.pos
     let color = 0xFFFF00FF
     dotTexture |> draw_segment(p - float2(sz.x, 0.), p - float2(0.f, sz.y), color)
