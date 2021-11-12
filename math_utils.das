@@ -1,3 +1,5 @@
+require dasbib/media
+
 require math
 
 def cross(a, b: float2)
@@ -35,3 +37,21 @@ def rotate(tm: float4; p: float2)
 
 def approach(from, to; dt, viscosity: float)
     return viscosity > 1e-9 ? from + (1. - exp(-dt / viscosity)) * (to - from) : to
+
+def in_box(box: float4; p: float2)
+    return (p.x >= box.y && p.y >= box.y &&
+            p.x <= box.z && p.y <= box.w)
+
+var rnd_seed = random_seed(int(get_time_after_start()))
+def rnd_range(x, y: float)
+    let r = random_float(rnd_seed)
+    return x + (y - x) * r
+
+def rnd_range(r: float2)
+    return rnd_range(r.x, r.y)
+
+def rnd_range(r: int2)
+    return roundi(rnd_range(float(r.x), float(r.y)))
+
+def rnd_range(r: float3[2])
+    return float3(rnd_range(r[0].x, r[1].x), rnd_range(r[0].y, r[1].y), rnd_range(r[0].z, r[1].z))

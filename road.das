@@ -1,6 +1,6 @@
 require daslib/media
 
-require utils
+require common
 require math_utils
 require draw_utils
 
@@ -142,3 +142,5 @@ def draw(r: Road)
         return road_point(r, x)
 
     transform2d_pop()
+
+var road: Road

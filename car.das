@@ -1,6 +1,6 @@
 require daslib/media
 
-require utils
+require common
 require math_utils
 require draw_utils
 require road
@@ -46,9 +46,17 @@ struct Car
     rearSpring: Spring
 
     gunPos: float2
+    gunDir: float2
+    gunLength: float
     gunAngle: float
 
+    gunWorldPos: float2
+    gunWorldDir: float2
+
     tm: float4 
+
+    shootFreq: float
+    lastShootAtTime: float
 
     // Debug
     frontTraceFrom: float2
@@ -85,10 +93,8 @@ def draw(c: Car)
         draw_segment(dotTextureLowGlow, bodyPoints[i] * bodyScale, bodyPoints[i + 1] * bodyScale, bodyColor)
 
     // Gun
-    let gunDir = float2(cos(c.gunAngle), sin(c.gunAngle))
-    let gunLen = 45.
     dotTextureNoGlow |> draw_arc(float2(128., -13.), 16.f, 180., 360., bodyColor)
-    dotTextureNoGlow |> draw_segment(c.gunPos, c.gunPos + gunDir * gunLen, bodyColor)
+    dotTextureNoGlow |> draw_segment(c.gunPos, c.gunPos + c.gunDir * c.gunLength, bodyColor)
 
     let wheelsColor = 0xD2691E
     transform2d_pop()
@@ -261,8 +267,14 @@ def update(var car: Car; road: Road; dt: float)
     car.pos = car.rearSpring.to - dir * car.rearWheelOffset
     car.tm  = make_tm(asin(dir.y))
 
-    let wGunPos = rotate(car.tm, car.gunPos) + car.pos
+    car.gunWorldPos = rotate(car.tm, car.gunPos) + car.pos
 
-    let mp = get_mouse_position()
-    let wishGunDir = normalize(mp - wGunPos)
+    let itm = inverse(car.tm)
+    let wishGunDir = rotate(itm, normalize(get_mouse_position() - car.gunWorldPos))
     car.gunAngle = atan2(wishGunDir.y, wishGunDir.x)
+
+    car.gunDir = float2(cos(car.gunAngle), sin(car.gunAngle))
+
+    car.gunWorldDir = rotate(car.tm, car.gunDir)
+
+var car: Car
