@@ -50,10 +50,14 @@ def FanEnemy()
 var rombSpawner = [[EnemySpawner seed=2179u, threshold=0.5, rate=2.]]
 var fanSpawner  = [[EnemySpawner seed=5531u, threshold=0.5, rate=1.]]
 
-var rombEnemies: array<RombEnemy>
 var fanEnemies: array<FanEnemy>
+var rombEnemies: array<RombEnemy>
 
 /* ====[ Common ]==== */
+
+def clear_enemies()
+    fanEnemies |> clear()
+    rombEnemies |> clear()
 
 def draw_enemies()
     for e in fanEnemies; { draw(e); }
@@ -84,6 +88,17 @@ def hit_enemies(var enemies; var p: Projectile)
 def hit_enemies(var p: Projectile)
     fanEnemies |> hit_enemies(p)
     rombEnemies |> hit_enemies(p)
+
+[generic]
+def hit_car_by_enemies(var enemies; var car: Car)
+    for e in enemies
+        if e.hp > 0. && length_sq(e.pos - car.worldCenter) < (car.hitRadius * car.hitRadius) /* intercect_box(e.hitBox, car.hitBox) */
+            e.hp = 0.
+            car.hp -= 1.
+
+def hit_car_by_enemies(var car: Car)
+    fanEnemies |> hit_car_by_enemies(car)
+    rombEnemies |> hit_car_by_enemies(car)
 
 [generic]
 def erase_dead_whit_fx(var enemies)
@@ -123,7 +138,7 @@ def spawn(var romb: RombEnemy)
     let border = 128.
     let posX = rnd_range(border, float(get_screen_width()) - 2. * border)
     romb.pos = float2(posX, 0.f)
-    romb.maxVel = rnd_range(64., 100.)
+    romb.maxVel = rnd_range(140., 200.)
     return romb
 
 def draw(romb: RombEnemy)
@@ -153,7 +168,7 @@ def spawn(var fan: FanEnemy)
     let hh = 0.55 * float(get_screen_height())
     let posY = rnd_range(hh - border, hh + border)
     fan.pos = float2(float(get_screen_width()), posY)
-    fan.maxVel = -rnd_range(64., 100.)
+    fan.maxVel = -rnd_range(120., 200.)
     fan.omega  = -rnd_range(1., 2.)
     fan.height = posY
     fan.amplitude = rnd_range(32., 64.)

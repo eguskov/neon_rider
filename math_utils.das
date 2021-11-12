@@ -50,6 +50,9 @@ def rnd_range(x, y: float)
 def rnd_range(r: float2)
     return rnd_range(r.x, r.y)
 
+def rnd_range(r: float4)
+    return float2(rnd_range(r.xy), rnd_range(r.zw))
+
 def rnd_range(r: int2)
     return roundi(rnd_range(float(r.x), float(r.y)))
 

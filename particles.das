@@ -33,8 +33,10 @@ struct Emitter
 
     ttlRange: float2
 
-    posRange: float2
-    posAngleRange: float2
+    radiusRange: float2
+    angleRange: float2
+
+    posRange: float4
 
     velRange: float2
     velAngleRange: float2
@@ -51,7 +53,7 @@ struct Emitter
 def Emitter()
     return <- [[Emitter alphaRange=float2(1.),
                         colorRange=[[auto[] float3(1.); float3(1.)]],
-                        posAngleRange=float2(0., 2. * PI),
+                        angleRange=float2(0., 2. * PI),
                         scaleRange=float2(1.),
                         countRange=int2(1)
               ]]
@@ -66,9 +68,9 @@ def emit(emitter: Emitter)
 
     let count = rnd_range(emitter.countRange)
     for i in range(count)
-        let ap = rnd_range(emitter.posAngleRange)
+        let ap = rnd_range(emitter.angleRange)
         let av = rnd_range(emitter.velAngleRange)
-        p.pos = emitter.pos - sz + float2(cos(ap), sin(ap)) * rnd_range(emitter.posRange)
+        p.pos = emitter.pos - sz + float2(cos(ap), sin(ap)) * rnd_range(emitter.radiusRange) + rnd_range(emitter.posRange)
         p.vel = float2(cos(av), sin(av)) * rnd_range(emitter.velRange)
         p.ttl = rnd_range(emitter.ttlRange)
         p.maxTtl = p.ttl
@@ -90,7 +92,7 @@ def explostion(pos: float2)
     e.ttlRange      = float2(.25, .5)
     e.velRange      = float2(16., 32.) * 8.
     e.alphaRange    = float2(1.)
-    e.posRange      = float2(8.)
+    e.radiusRange   = float2(8.)
     e.velAngleRange = float2(0., 2. * PI)
     e.scaleRange    = float2(2.)
     e.countRange    = int2(32, 64)
@@ -104,7 +106,7 @@ def warp(pos: float2; ttl: float)
     e.ttlRange      = float2(.25, .5)
     e.velRange      = float2(16., 32.) * 8.
     e.alphaRange    = float2(0.7)
-    e.posRange      = float2(64.)
+    e.radiusRange   = float2(64.)
     e.velAngleRange = float2(0.)
     e.scaleRange    = float2(2.)
     e.countRange    = int2(16, 32)
@@ -112,6 +114,22 @@ def warp(pos: float2; ttl: float)
     e.omega = 0.
     e.ttl   = ttl
     e.isAttractedTo = true
+    emitters |> push(e)
+
+def wall_of_file(pos: float2; dir: float)
+    let hh = 0.5 * float(get_screen_height())
+    var e <- Emitter()
+    e.colorRange    = [[auto[] color_to_float3(0x8B0000); color_to_float3(0x8B0000)]]
+    e.pos           = pos
+    e.ttlRange      = float2(1.25, .5)
+    e.posRange      = float4(0.f, 0.f, -hh, hh)
+    e.velRange      = float2(16., 32.) * dir
+    e.alphaRange    = float2(1.)
+    e.radiusRange   = float2(8.)
+    e.velAngleRange = float2(0., 2. * PI)
+    e.scaleRange    = float2(2.5)
+    e.countRange    = int2(8, 8)
+    e.ttl           = 1e6
     emitters |> push(e)
 
 def update_particles(dt: float)

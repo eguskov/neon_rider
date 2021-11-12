@@ -12,6 +12,8 @@ struct Car
     vel: float2
     dir: float2
     up: float2
+    center: float2
+    worldCenter: float2
 
     wheelRadius: float
     wheelsDistance: float
@@ -59,6 +61,13 @@ struct Car
     lastShootAtTime: float
 
     alpha: float
+    scale: float
+
+    hp: float
+    maxHp: float
+
+    hitBox: float4
+    hitRadius: float
 
     // Debug
     frontTraceFrom: float2
@@ -88,15 +97,63 @@ def draw(c: Car)
                               float2(24., 16.);   // 14
                               float2(0., 16.)   // 15
                      ]]
-
     
     let bodyColor = make_color(color_to_float3(0x4169E1) * car.alpha)
-    let bodyScale = 0.75
+    let bodyScale = 0.75 * car.scale
+
+    // HP
+    let sz = float2(solid.width)
+    let innerPoints <- to_array([[auto[] bodyPoints[0] * bodyScale;
+                                         bodyPoints[1] * bodyScale;
+                                         bodyPoints[14] * bodyScale;
+                                         bodyPoints[2] * bodyScale;
+                                         bodyPoints[13] * bodyScale;
+                                         bodyPoints[3] * bodyScale;
+                                         bodyPoints[12] * bodyScale;
+                                         bodyPoints[4] * bodyScale;
+                                         bodyPoints[11] * bodyScale;
+                                         bodyPoints[4] * bodyScale;
+                                         bodyPoints[10] * bodyScale;
+                                         bodyPoints[4] * bodyScale;
+                                         bodyPoints[9] * bodyScale;
+                                         bodyPoints[5] * bodyScale;
+                                         bodyPoints[8] * bodyScale;
+                                         bodyPoints[5] * bodyScale;
+                                         bodyPoints[7] * bodyScale;
+                                         bodyPoints[6] * bodyScale]])
+    let innerUVs    <- to_array([[auto[] float2(0., sz.y);
+                                         float2(0., 0.);
+                                         float2(sz.x, sz.y); 
+                                         float2(sz.x, 0.);
+                                         float2(0., sz.y);
+                                         float2(0., 0.);
+                                         float2(sz.x, sz.y); 
+                                         float2(sz.x, 0.);
+                                         float2(0., sz.y);
+                                         float2(0., 0.);
+                                         float2(sz.x, sz.y); 
+                                         float2(sz.x, 0.);
+                                         float2(0., sz.y);
+                                         float2(0., 0.);
+                                         float2(sz.x, sz.y); 
+                                         float2(sz.x, 0.);
+                                         float2(0., sz.y);
+                                         float2(0., 0.);
+                                         float2(sz.x, sz.y); 
+                                         float2(sz.x, 0.)]])
+
+    let t = saturate(1. - (car.hp / car.maxHp))
+    let innerColor = make_color(lerp(color_to_float3(0x4169E1), color_to_float3(0xB22222), t) * car.alpha)
+
+    // let innerColor = make_color(color_to_float3(0x4169E1) * car.alpha * 0.2)
+    solid |> draw_triangle_strip(innerPoints, innerUVs, innerColor)
+    
+    // Body
     for i in range(length(bodyPoints) - 1)
         draw_segment(dotTextureLowGlow, bodyPoints[i] * bodyScale, bodyPoints[i + 1] * bodyScale, bodyColor)
 
     // Gun
-    dotTextureNoGlow |> draw_arc(float2(128., -13.), 16.f, 180., 360., bodyColor)
+    dotTextureNoGlow |> draw_arc(float2(128., -13.) * car.scale, 16.f * car.scale, 180., 360., bodyColor)
     dotTextureNoGlow |> draw_segment(c.gunPos, c.gunPos + c.gunDir * c.gunLength, bodyColor)
 
     let wheelsColor = make_color(color_to_float3(0xD2691E) * car.alpha)
@@ -279,5 +336,7 @@ def update(var car: Car; road: Road; dt: float)
     car.gunDir = float2(cos(car.gunAngle), sin(car.gunAngle))
 
     car.gunWorldDir = rotate(car.tm, car.gunDir)
+
+    car.worldCenter = rotate(car.tm, car.center) + car.pos
 
 var car: Car

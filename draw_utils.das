@@ -137,3 +137,5 @@ let dotTexture = create_segment_texture(0.4 /* glow_intencity */)
 let dotTextureNoGlow = create_segment_texture(0.01 /* glow_intencity */)
 let dotTextureLowGlow = create_segment_texture(0.2 /* glow_intencity */)
 let dotTextureHighGlow = create_segment_texture(0.8 /* glow_intencity */)
+
+let solid = create_managed_image(1, 1, to_array([[auto[] make_color(1., 0.)]]), true, false)
