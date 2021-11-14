@@ -78,7 +78,7 @@ def draw(c: Car)
 
     let dir = normalize(c.frontSpring.to - c.rearSpring.to)
     transform2d_translate(c.rearSpring.to - dir * c.rearWheelOffset)
-    transform2d_rotate(asin(dir.y))
+    transform2d_rotate(atan2(dir.y, dir.x))
 
     let bodyPoints = [[auto[] float2(0., 16.);    // 0
                               float2(0., -16.);   // 1
@@ -98,7 +98,7 @@ def draw(c: Car)
                               float2(0., 16.)   // 15
                      ]]
     
-    let bodyColor = make_color(color_to_float3(0x4169E1) * car.alpha)
+    let bodyColor = make_color(color_to_float3(0xBDB76B) * car.alpha)
     let bodyScale = 0.75 * car.scale
 
     // HP
@@ -143,7 +143,7 @@ def draw(c: Car)
                                          float2(sz.x, 0.)]])
 
     let t = saturate(1. - (car.hp / car.maxHp))
-    let innerColor = make_color(lerp(color_to_float3(0x4169E1), color_to_float3(0xB22222), t) * car.alpha)
+    let innerColor = make_color(lerp(color_to_float3(0xBDB76B), color_to_float3(0xB22222), t) * car.alpha)
 
     // let innerColor = make_color(color_to_float3(0x4169E1) * car.alpha * 0.2)
     solid |> draw_triangle_strip(innerPoints, innerUVs, innerColor)

@@ -9,6 +9,7 @@ require road
 require car
 require enemies
 require particles
+require score
 
 // options debugger            // uncomment for debug in VS Code
 // require daslib/debug        // uncomment for debug in VS Code
@@ -62,6 +63,9 @@ def resize(var car: Car; scale: float)
     car.frontSpring.curLength = springLen
     car.rearSpring.curLength = springLen
 
+var nextBeamAtTime = 0.
+var beamInterval = 5.f
+
 def restart()
     projectiles |> clear()
 
@@ -79,7 +83,13 @@ def restart()
 
     warpTime = warpDuration
     if warpTime > 0.
-        warp(car.pos - float2(0., 30.), warpTime)
+        warp(car.pos - float2(-16., 30.), warpTime)
+
+    nextBeamAtTime = get_time_after_start() + beamInterval
+
+    if score > bestScore
+        bestScore = score
+    score = 0.
 
 // 'initialize' runs once when game starts and every hot-reload
 [export]
@@ -93,8 +103,8 @@ def initialize
 
     restart()
 
-    wall_of_file(float2(0., 0.5 * float(get_screen_height())), 1.)
-    wall_of_file(float2(float(get_screen_width()), 0.5 * float(get_screen_height())), -1.)
+    wall_of_file(float2(1., 0.5 * float(get_screen_height())), 1.)
+    wall_of_file(float2(float(get_screen_width()-1), 0.5 * float(get_screen_height())), -1.)
 
 // this function is called to update game data,
 // dt - time elapsed since the previous update (in seconds)
@@ -109,15 +119,23 @@ def act(dt: float)
     elif get_key_up(VK_LEFT) || get_key_up(VK_RIGHT) || get_key_up(VK_A) || get_key_up(VK_D)
         car.speed = 0.
 
-    update_particles(dt)
+    let atTime = get_time_after_start()
+
+    score += 1. * dt
+
+    update_particles(dt, atTime)
 
     let wasWarpTime = warpTime
     warpTime -= dt
 
-    let atTime = get_time_after_start()
-
     road.speed  = 3.
     road.offset = road.speed * atTime
+
+    if atTime >= nextBeamAtTime
+        nextBeamAtTime = atTime + beamInterval
+        // beam(float2(road.scale * 8. - 16.f, 64.), 2.)
+    
+    road |> update(dt)
 
     if wasWarpTime > 0.
         let t = (warpDuration - warpTime) / warpDuration
@@ -150,19 +168,34 @@ def act(dt: float)
 
     erase_dead_whit_fx()
 
-    if car.hp < 0. || car.worldCenter.x < 0. || car.worldCenter.x > float(get_screen_width())
+    if (car.hp < 0. ||
+        car.worldCenter.x < 0. ||
+        car.worldCenter.y < 0. ||
+        car.worldCenter.x > float(get_screen_width()) ||
+        car.worldCenter.y > float(get_screen_height()))
         restart()
 
 // this function will be called every frame after 'act',
 // you can draw anything in this function
 [export]
 def draw
-    // let msg = "{romb_spawn_fn(get_time_after_start())}"
-    // set_font_size(16)
-    // text_out(10, 10, msg, 0xFFFFFFFF)
+    var minI = 999999
+    for rp in values(road_patches)
+        if rp.i < minI
+            minI = rp.i
+    // let msg = length(road_patches) > 0 ? "{floori(float(road_patches[0].i))}" : ""
+    // let msg = "{floori(road.offset)}"
+    // let msg = "{road_point_index(road, 128.)}"
+    set_font_size(16)
+    text_out(81, 10, "Score: {floori(score)}", 0xFFFFFFFF)
+    text_out(32, 32, "Best Score: {floori(bestScore)}", 0xFFFFFFFF)
 
     // transform2d_push()
     // transform2d_scale(float2(0.5, 0.5), float2())
+
+    for rp in values(road_patches)
+        let p = float2((float(rp.i) * road.step - road.offset) * road.scale, 512.f)
+        circle(p.x, p.y, 8., 0xFF0000)
 
     enable_premultiplied_alpha_blend()
 

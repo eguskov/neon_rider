@@ -21,10 +21,10 @@ def create_segment_texture(glow_intencity: float): ImageHandle
 
     return img
 
-def draw_segment(img: ImageHandle; from, to: float2; color: uint)
+def draw_segment(img: ImageHandle; from, to: float2; color: uint; scale = 1.)
     let sz = float(img.width)
     let d = normalize(to - from) * sz * 0.9
-    let n = float2(-d.y, d.x) * 0.9
+    let n = float2(-d.y, d.x) * 0.9 * scale
 
     let coords <- to_array([[auto[]
             from - d - n;

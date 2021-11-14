@@ -39,7 +39,7 @@ def approach(from, to; dt, viscosity: float)
     return viscosity > 1e-9 ? from + (1. - exp(-dt / viscosity)) * (to - from) : to
 
 def in_box(box: float4; p: float2)
-    return (p.x >= box.y && p.y >= box.y &&
+    return (p.x >= box.x && p.y >= box.y &&
             p.x <= box.z && p.y <= box.w)
 
 var rnd_seed = random_seed(int(get_time_after_start()))
